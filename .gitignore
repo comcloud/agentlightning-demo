@@ -206,4 +206,4 @@ cython_debug/
 .claude/*.local.json
 
 simple_math/data
-
+.idea
