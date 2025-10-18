@@ -1,0 +1,74 @@
+flowchart TD
+    A[启动训练脚本 train.sh] --> B[执行agentlightning.verl模块]
+    B --> C[加载LitSQLAgent类]
+    
+    C --> D[初始化LitSQLAgent实例]
+    D --> E[调用trainer.fit()方法]
+    
+    E --> F[启动AgentLightningTrainer]
+    F --> G[初始化训练循环]
+    
+    G --> H[获取训练任务样本]
+    H --> I[调用training_rollout()]
+    
+    I --> J[_execute_rollout()方法执行]
+    
+    subgraph Rollout执行流程
+        J --> K[创建临时数据库副本]
+        K --> L[初始化SQLAgent实例]
+        L --> M[调用SQLAgent.graph()构建状态图]
+        
+        M --> N[构建LangGraph状态图]
+        N --> O[添加write_query节点]
+        N --> P[添加execute_query节点]
+        N --> Q[添加check_query节点]
+        N --> R[添加rewrite_query节点]
+        N --> S[设置边和条件边]
+        
+        S --> T[编译状态图返回CompiledStateGraph]
+        T --> U[调用agent.invoke()执行状态图]
+        
+        subgraph 状态图执行循环
+            U --> V[write_query节点: 生成SQL查询]
+            V --> W[execute_query节点: 执行SQL查询]
+            W --> X[check_query节点: 检查查询正确性]
+            X --> Y{查询正确或达到最大轮数?}
+            Y -->|否| Z[rewrite_query节点: 重写查询]
+            Z --> W
+            Y -->|是| AA[返回最终结果]
+        end
+        
+        AA --> AB[evaluate_query()计算奖励]
+        AB --> AC[返回奖励值]
+    end
+    
+    AC --> AD[收集多个rollout数据]
+    AD --> AE[执行策略优化更新]
+    AE --> AF{训练完成?}
+    AF -->|否| G
+    AF -->|是| AG[保存训练模型]
+    
+    style A fill:#e1f5fe
+    style AG fill:#c8e6c9
+    style Rollout执行流程 fill:#fff3e0
+    style 状态图执行循环 fill:#fce4ec
+    
+    linkStyle 0 stroke:#2196F3;
+    linkStyle 1 stroke:#2196F3;
+    linkStyle 2 stroke:#2196F3;
+    linkStyle 3 stroke:#2196F3;
+    linkStyle 4 stroke:#4CAF50;
+    linkStyle 5 stroke:#FF9800;
+    linkStyle 6 stroke:#FF9800;
+    linkStyle 7 stroke:#FF9800;
+    linkStyle 8 stroke:#FF9800;
+    linkStyle 9 stroke:#FF9800;
+    linkStyle 10 stroke:#FF9800;
+    linkStyle 11 stroke:#FFEB3B;
+    linkStyle 12 stroke:#FFEB3B;
+    linkStyle 13 stroke:#FFEB3B;
+    linkStyle 14 stroke:#FFEB3B;
+    linkStyle 15 stroke:#FFEB3B;
+    linkStyle 16 stroke:#FF5722;
+    linkStyle 17 stroke:#FF5722;
+    linkStyle 18 stroke:#9C27B0;

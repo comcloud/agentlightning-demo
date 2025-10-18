@@ -1,0 +1,40 @@
+flowchart TD
+    A[开始训练] --> B[启动Ray分布式框架]
+    B --> C[初始化AgentLightningTrainer]
+    C --> D[加载预训练基础模型]
+    D --> E[初始化VERL算法]
+    
+    E --> F[进入训练循环]
+    
+    F --> G[分发训练任务给智能体]
+    G --> H[智能体执行Rollout]
+    
+    subgraph Rollout执行
+        H --> I[生成SQL查询]
+        I --> J[执行SQL查询]
+        J --> K[检查查询正确性]
+        K --> L{查询正确?}
+        L -->|否| M[根据反馈重写查询]
+        M --> J
+        L -->|是| N[收集执行轨迹]
+        K -->|达到最大轮数| N
+    end
+    
+    N --> O[计算执行奖励]
+    O --> P[汇总多个Rollout数据]
+    
+    subgraph 模型更新
+        P --> Q[计算策略优势(GRPO)]
+        Q --> R[执行PPO策略优化]
+        R --> S[更新策略网络参数]
+        S --> T[同步更新后的模型]
+    end
+    
+    T --> U{训练完成?}
+    U -->|否| F
+    U -->|是| V[结束训练]
+    
+    style A fill:#e1f5fe
+    style V fill:#c8e6c9
+    style Rollout执行 fill:#fff3e0
+    style 模型更新 fill:#fce4ec
