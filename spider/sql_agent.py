@@ -277,12 +277,15 @@ class SQLAgent:
             )
         else:
             # 否则使用环境变量配置的LLM
-            self.model_name: str = os.environ.get("MODEL", "gpt-4.1-mini")
+            # Load configuration using Pydantic config
+            from config import settings
+            
+            self.model_name: str = settings.model
             self.llm = init_chat_model(
                 self.model_name,
                 model_provider="openai",
-                openai_api_base=endpoint or os.environ["OPENAI_API_BASE"],
-                openai_api_key=os.environ["OPENAI_API_KEY"],
+                openai_api_base=endpoint or settings.openai_api_base,
+                openai_api_key=settings.openai_api_key,
                 temperature=0,
                 max_retries=1,
                 max_tokens=2048,
@@ -804,22 +807,28 @@ def spider_dev_data():
     # Read from dev.parquet
     import pandas as pd
 
-    spider_dev_data_path = os.path.join(os.environ.get("VERL_SPIDER_DATA_DIR", "data"), "dev.parquet")
+    # Load configuration using Pydantic config
+    from config import settings
+    
+    spider_dev_data_path = os.path.join(settings.verl_spider_data_dir, "dev.parquet")
     if not os.path.exists(spider_dev_data_path):
         raise FileNotFoundError(f"Spider dev data file {spider_dev_data_path} does not exist.")
     df = pd.read_parquet(spider_dev_data_path)  # type: ignore
-    if "OPENAI_API_BASE" not in os.environ:
+    
+    # Use default value if not set
+    if not settings.openai_api_base:
         logger.warning(
             "Environment variable OPENAI_API_BASE is not set. Using default value 'https://api.openai.com/v1'."
         )
         openai_api_base = "https://api.openai.com/v1"
     else:
-        openai_api_base = os.environ["OPENAI_API_BASE"]
+        openai_api_base = settings.openai_api_base
 
     resource = {
         "main_llm": agentlightning.LLM(
-            model="gpt-4.1-nano",
+            model=settings.model,
             endpoint=openai_api_base,
+            api_key=settings.openai_api_key,
             sampling_parameters={
                 "temperature": 0.0,
             },
@@ -829,6 +838,8 @@ def spider_dev_data():
 
 
 if __name__ == "__main__":
-    dotenv.load_dotenv()
+    # Load configuration using Pydantic config
+    from config import settings
+    
     agent, trainer = agentlightning.lightning_cli(LitSQLAgent, agentlightning.Trainer)
-    trainer.fit(agent, os.environ["VERL_API_BASE"], dev_data=spider_dev_data())
+    trainer.fit(agent, settings.verl_api_base, dev_data=spider_dev_data())

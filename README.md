@@ -59,18 +59,29 @@ cd agentlightning-demo
 
 2. 安装 AgentLightning 框架（根据官方文档）
 
-3. 设置环境变量：
+3. 配置环境变量：
+
+复制 [.env.example](file:///Users/rayss/AI/agentlightning-demo/.env.example) 文件并重命名为 `.env`，然后填写必要的配置值：
+
 ```bash
-export OPENAI_API_KEY=your_openai_api_key
+cp .env.example .env
+# 编辑 .env 文件填入您的配置
 ```
 
 ### 配置说明
 
-根据不同示例的需求，可能需要设置不同的环境变量：
+项目现在使用 Pydantic 管理配置，配置值可以通过以下方式提供：
+
+1. `.env` 文件（推荐）
+2. 系统环境变量
+
+配置项包括：
 
 - `OPENAI_API_KEY` - OpenAI API 密钥
-- `OPENAI_API_BASE` - 可选，自定义 API 端点
-- `VERL_API_BASE` - 用于 Spider 示例的 VERL API 端点
+- `OPENAI_API_BASE` - 可选，自定义 API 端点，默认为 https://api.openai.com/v1
+- `MODEL` - 要使用的模型名称，默认为 gpt-4.1-mini
+- `VERL_API_BASE` - 用于 Spider 示例的 VERL API 端点，默认为 http://localhost:9999/
+- `VERL_SPIDER_DATA_DIR` - Spider 数据目录，默认为 data
 - `WANDB_API_KEY` - Weights & Biases API 密钥（如果使用实验跟踪）
 
 ## 核心功能与特性

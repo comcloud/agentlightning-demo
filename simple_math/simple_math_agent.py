@@ -270,12 +270,14 @@ def math_data_loader(mode='train'):
     Returns:
         DevTaskLoader with math problem samples
     """
-    # Create resources
+    # Create resources using Pydantic config
+    from config import settings
+    
     resource = {
         "main_llm": LLM(
-            model=os.environ.get("MODEL"),
-            endpoint=os.environ.get("OPENAI_API_BASE"),
-            api_key=os.environ.get("API_KEY"),
+            model=settings.model,
+            endpoint=settings.openai_api_base,
+            api_key=settings.openai_api_key,
             sampling_parameters={
                 "temperature": 0.7,
                 "max_tokens": 2000,
@@ -299,10 +301,9 @@ def math_data_loader(mode='train'):
 
 
 if __name__ == "__main__":
-    # Load environment variables
-    import dotenv
-
-    dotenv.load_dotenv()
+    # Load configuration
+    from config import settings
+    # Settings are automatically loaded by Pydantic
 
     # # Create agent
     # agent = SimpleMathAgent(
@@ -315,9 +316,12 @@ if __name__ == "__main__":
     # Create trainer
     agent, trainer = agentlightning.lightning_cli(SimpleMathAgent, agentlightning.Trainer)
     # Train the agent
+    # Load VERL API base using Pydantic config
+    from config import settings
+    
     trainer.fit(
         agent,
-        os.environ.get("VERL_API_BASE", "http://localhost:9999/"),
+        settings.verl_api_base,
         dev_data=math_data_loader('train'),
         val_data=math_data_loader('val')
     )
